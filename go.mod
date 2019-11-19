@@ -1,4 +1,4 @@
-module github.com/heidiseo/hackernews/cmd
+module github.com/heidiseo/hackernews
 
 go 1.13
 
