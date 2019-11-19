@@ -76,7 +76,7 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.Flags().StringP("posts", "n", viper.GetString("Posts"), "Set your name")
+	rootCmd.Flags().IntP("posts", "n", viper.GetInt("Posts"), "Set your name")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -134,7 +134,6 @@ func GetTopStories(i int) ([]int, error) {
 			ids = append(ids, id)
 		}
 	}
-	//fmt.Println(ids)
 	return ids, nil
 }
 
