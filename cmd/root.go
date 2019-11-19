@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strconv"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -42,14 +41,13 @@ var rootCmd = &cobra.Command{
 	Long:  `long description`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		numberString, _ := cmd.Flags().GetString("posts")
-		number, err := strconv.Atoi(numberString)
-		ids, err := getTopStories(number)
+		number, _ := cmd.Flags().GetInt("posts")
+		ids, err := GetTopStories(number)
 		if err != nil {
 			fmt.Println(err)
 			log.Fatal(err)
 		}
-		allStories, err := getIndividualStory(ids)
+		allStories, err := GetIndividualStory(ids)
 		if err != nil {
 			fmt.Println(err)
 			log.Fatal(err)
@@ -107,7 +105,7 @@ func initConfig() {
 	}
 }
 
-func getTopStories(i int) ([]int, error) {
+func GetTopStories(i int) ([]int, error) {
 	url := "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty"
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -140,7 +138,7 @@ func getTopStories(i int) ([]int, error) {
 	return ids, nil
 }
 
-func getIndividualStory(ids []int) (string, error) {
+func GetIndividualStory(ids []int) (string, error) {
 	rank := 1
 	var allHackerNews []HackerNews
 	for _, id := range ids {
