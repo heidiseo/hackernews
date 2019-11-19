@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
-	"regexp"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -47,12 +47,13 @@ var rootCmd = &cobra.Command{
 			fmt.Println(err)
 			log.Fatal(err)
 		}
-		allStories, err := GetIndividualStory(ids)
+		responses, err := GetIndividualStory(ids)
 		if err != nil {
 			fmt.Println(err)
 			log.Fatal(err)
 		}
-		fmt.Println(allStories)
+		formatedResponses, err := ResponseFormat(responses)
+		fmt.Println(formatedResponses)
 	},
 }
 
@@ -137,9 +138,8 @@ func GetTopStories(i int) ([]int, error) {
 	return ids, nil
 }
 
-func GetIndividualStory(ids []int) (string, error) {
-	rank := 1
-	var allHackerNews []HackerNews
+func GetIndividualStory(ids []int) ([]HackerNewsResponse, error) {
+	var responses []HackerNewsResponse
 	for _, id := range ids {
 		url := fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%v.json?print=pretty", id)
 		req, err := http.NewRequest("GET", url, nil)
@@ -148,44 +148,52 @@ func GetIndividualStory(ids []int) (string, error) {
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		defer resp.Body.Close()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		var result HackerNewsResponse
 		err = json.Unmarshal(body, &result)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
+		responses = append(responses, result)
+	}
+	return responses, nil
+}
 
-		if result.Title == "" && result.Author == "" {
+func ResponseFormat(responses []HackerNewsResponse) (string, error) {
+	rank := 1
+	var allHackerNews []HackerNews
+	for _, response := range responses {
+		if response.Title == "" || response.Author == "" {
 			return "", fmt.Errorf("title and/or author are empty")
 		}
 
-		if len(result.Title) >= 256 && len(result.Author) >= 256 {
+		if len(response.Title) > 256 || len(response.Author) > 256 {
 			return "", fmt.Errorf("title and/or author have more than 256 characters")
 		}
 
-		_, err = regexp.MatchString(`(http[s]?:\/\/)?([^\/\s]+\/)(.*)`, result.URI)
-		if err != nil {
-			return "", fmt.Errorf("invalid URI")
-		}
-
-		if result.Points < 0 && len(result.Comments) < 0 && rank < 0 {
+		if response.Points < 0 || len(response.Comments) < 0 || rank < 0 {
 			return "", fmt.Errorf("points/comments/rank have negative number(s)")
 		}
 
+		u, err := url.Parse(response.URI)
+		if err != nil || u.Scheme == "" || u.Host == "" || u.Path == "" {
+			return "", fmt.Errorf("invalid URI")
+		}
+
 		hackerNews := HackerNews{
-			Title:    result.Title,
-			URI:      result.URI,
-			Author:   result.Author,
-			Points:   result.Points,
-			Comments: len(result.Comments),
+			Title:    response.Title,
+			URI:      response.URI,
+			Author:   response.Author,
+			Points:   response.Points,
+			Comments: len(response.Comments),
 			Rank:     rank,
 		}
 		allHackerNews = append(allHackerNews, hackerNews)
@@ -196,4 +204,5 @@ func GetIndividualStory(ids []int) (string, error) {
 		return "", err
 	}
 	return string(jsonHackerNews), nil
+
 }
