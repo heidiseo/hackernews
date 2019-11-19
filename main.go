@@ -15,8 +15,8 @@ limitations under the License.
 */
 package main
 
-import "gitHub.com/heidiseo/hackernews/cmd"
+import "github.com/heidiseo/hackernews/cmd"
 
 func main() {
-  cmd.Execute()
+	cmd.Execute()
 }
