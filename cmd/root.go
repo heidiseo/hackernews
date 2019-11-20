@@ -45,6 +45,10 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		//adds a flag called posts and gets the number entered after the flag
 		number, _ := cmd.Flags().GetInt("posts")
+		if number > 100 {
+			err := fmt.Errorf("posts maximum number - 100")
+			log.Fatal(err)
+		}
 		//calls API with the number received above and gets the number of top stories
 		ids, err := GetTopStories(number)
 		if err != nil {
