@@ -10,6 +10,7 @@ import (
 	"github.com/onsi/gomega"
 )
 
+//TestGetTopStories tests if the function returns the right top story IDs
 func TestGetTopStories(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
@@ -41,6 +42,7 @@ func TestGetTopStories(t *testing.T) {
 	}
 }
 
+//TestGetIndividualStory tests if the function returns the right top story details
 func TestGetIndividualStory(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	var responses []HackerNewsResponse
@@ -69,6 +71,7 @@ func TestGetIndividualStory(t *testing.T) {
 	}
 }
 
+//TestResponseFormat tests if posts pass the requirements and convers it to the right format to return
 func TestResponseFormat(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	tests := []struct {

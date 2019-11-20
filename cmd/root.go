@@ -16,6 +16,7 @@ import (
 
 var cfgFile string
 
+//HackerNewsResponse is the response of API endpoint for specific ID if successful
 type HackerNewsResponse struct {
 	Author   string `json:"by"`
 	ID       int    `json:"id"`
@@ -25,6 +26,7 @@ type HackerNewsResponse struct {
 	Comments []int  `json:"kids"`
 }
 
+//HackerNews is the response of the command
 type HackerNews struct {
 	Title    string `json:"title"`
 	URI      string `json:"uri"`
@@ -34,31 +36,35 @@ type HackerNews struct {
 	Rank     int    `json:"rank"`
 }
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command - hackernews
 var rootCmd = &cobra.Command{
 	Use:   "hackernews",
-	Short: "A brief description of your application",
-	Long:  `long description`,
+	Short: "posts from hackernews",
+	Long:  `will return the top number of posts the user requests`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		//adds a flag called posts and gets the number entered after the flag
 		number, _ := cmd.Flags().GetInt("posts")
+		//calls API with the number received above and gets the number of top stories
 		ids, err := GetTopStories(number)
 		if err != nil {
 			fmt.Println(err)
 			log.Fatal(err)
 		}
+		//calls API with the top story IDs to call another end point to receive full info
 		responses, err := GetIndividualStory(ids)
 		if err != nil {
 			fmt.Println(err)
 			log.Fatal(err)
 		}
+		//validates and formats the response
 		formatedResponses, err := ResponseFormat(responses)
+		//prints on the command line
 		fmt.Println(formatedResponses)
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute the root command and sets the flag.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -66,18 +72,16 @@ func Execute() {
 	}
 }
 
+//defines flags
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// Cobra supports persistent flags, which is global for application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.hello-cobra.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+	// to run when this action is called directly
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.Flags().IntP("posts", "n", viper.GetInt("Posts"), "Set your name")
+	rootCmd.Flags().IntP("posts", "n", viper.GetInt("Posts"), "enter how many posts you would like to see")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -106,6 +110,7 @@ func initConfig() {
 	}
 }
 
+//GetTopStories gets a numbner of posts from the command line and calls Hackernews /topstories endpoint to get IDs
 func GetTopStories(i int) ([]int, error) {
 	url := "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty"
 
@@ -138,6 +143,7 @@ func GetTopStories(i int) ([]int, error) {
 	return ids, nil
 }
 
+//GetIndividualStory gets top story IDs and calls item end poit to get detailed information
 func GetIndividualStory(ids []int) ([]HackerNewsResponse, error) {
 	var responses []HackerNewsResponse
 	for _, id := range ids {
@@ -167,6 +173,7 @@ func GetIndividualStory(ids []int) ([]HackerNewsResponse, error) {
 	return responses, nil
 }
 
+//ResponseFormat gets posts details, validates and covert it to the response format for the command line.
 func ResponseFormat(responses []HackerNewsResponse) (string, error) {
 	rank := 1
 	var allHackerNews []HackerNews
@@ -197,12 +204,15 @@ func ResponseFormat(responses []HackerNewsResponse) (string, error) {
 			Rank:     rank,
 		}
 		allHackerNews = append(allHackerNews, hackerNews)
+		//adds the rank by the post order
 		rank++
 	}
+	//formats it to JSON
 	jsonHackerNews, err := json.Marshal(allHackerNews)
 	if err != nil {
 		return "", err
 	}
+	//converts it to string so that it is human readable in command line
 	return string(jsonHackerNews), nil
 
 }
