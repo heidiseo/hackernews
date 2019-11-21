@@ -41,6 +41,6 @@ This Command Line Interface that has a command `hackernews` and a flag `--posts`
         * converts the result to the right format
 
 
-## Tests(main_test.go)
+## Tests(root_test.go)
 
 To run the tests do `go test`.
